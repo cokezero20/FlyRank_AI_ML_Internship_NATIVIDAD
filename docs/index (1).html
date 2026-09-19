@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predicting Content Decline in Search Portfolios — John Matthew Natividad</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fdfdfc;
+      --text: #1a1a1a;
+      --text-secondary: #4a4a4a;
+      --accent: #1a5276;
+      --accent-light: #d4e6f1;
+      --border: #d5d5d5;
+      --surface: #f5f5f3;
+      --positive: #1e8449;
+      --negative: #c0392b;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --sans: 'Inter', system-ui, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #141413;
+        --text: #e5e5e3;
+        --text-secondary: #a0a09e;
+        --accent: #5dade2;
+        --accent-light: #1c2e3d;
+        --border: #333;
+        --surface: #1e1e1c;
+        --positive: #27ae60;
+        --negative: #e74c3c;
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    /* ── Header ─────────────────────────────── */
+    header {
+      margin-bottom: 3.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 2px solid var(--text);
+    }
+
+    header p.label {
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: 2.4rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+
+    .author {
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.3rem;
+    }
+
+    .date {
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* ── Abstract ───────────────────────────── */
+    .abstract {
+      background: var(--surface);
+      border-left: 3px solid var(--accent);
+      padding: 1.5rem 1.8rem;
+      margin: 2.5rem 0;
+      font-size: 1.02rem;
+      line-height: 1.75;
+    }
+
+    .abstract p {
+      margin-bottom: 0;
+    }
+
+    /* ── Sections ───────────────────────────── */
+    h2 {
+      font-family: var(--serif);
+      font-size: 1.55rem;
+      font-weight: 700;
+      margin-top: 3rem;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    h3 {
+      font-family: var(--sans);
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.6rem;
+      color: var(--text);
+    }
+
+    p {
+      margin-bottom: 1.1rem;
+      max-width: 65ch;
+    }
+
+    /* ── Tables ──────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--sans);
+      font-size: 0.88rem;
+    }
+
+    thead th {
+      text-align: left;
+      font-weight: 600;
+      padding: 0.6rem 0.8rem;
+      border-bottom: 2px solid var(--text);
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 0.5rem 0.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .num {
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    /* ── Figures ──────────────────────────────── */
+    figure {
+      margin: 2rem 0;
+    }
+
+    figure img {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+
+    figcaption {
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+      line-height: 1.5;
+    }
+
+    /* ── Callouts ─────────────────────────────── */
+    .callout {
+      background: var(--surface);
+      padding: 1.2rem 1.5rem;
+      border-radius: 4px;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .callout-title {
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-bottom: 0.4rem;
+      color: var(--accent);
+    }
+
+    /* ── Footer ───────────────────────────────── */
+    footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    /* ── Responsive ────────────────────────────── */
+    @media (max-width: 600px) {
+      body { font-size: 16px; }
+      h1 { font-size: 1.8rem; }
+      h2 { font-size: 1.3rem; }
+      .container { padding: 2rem 1rem 3rem; }
+      .abstract { padding: 1rem 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- HEADER                                  -->
+  <!-- ════════════════════════════════════════ -->
+  <header>
+    <p class="label">Research Paper</p>
+    <h1>Predicting Content Decline in Search Portfolios: A Rule-Based Baseline and Validation Study</h1>
+    <p class="author">John Matthew Natividad</p>
+    <p class="date">June 2026 · FlyRank ML Internship Capstone</p>
+  </header>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- ABSTRACT                                -->
+  <!-- ════════════════════════════════════════ -->
+  <div class="abstract">
+    <p>
+      Can a simple, transparent rule identify which content items in a search portfolio are likely to decline — before they do? Using 95,000+ content items across 57 brands from the FlyRank internship dataset (January–April 2026), this study built a rule-based baseline that scores content by search position and visibility, then compared it against a Random Forest classifier on the same data and split. The baseline achieved precision@20 of 60–70% against a base rate of 37%, and the model reached 90%+ on a random split — but dropped to near coin-flip (AUC 0.549) when validated on unseen clients. The honest conclusion: the rule provides a practical, auditable starting point for content review prioritization, while the model's apparent strength was substantially borrowed from client-level memorization. This paper presents ranked recommendations for content teams, with documented limits on what the evidence supports.
+    </p>
+  </div>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- 1. INTRODUCTION                         -->
+  <!-- ════════════════════════════════════════ -->
+  <h2>1. Introduction</h2>
+
+  <p>
+    A content team managing thousands of pages faces a prioritization problem: which pages need attention right now? Reviewing every page is impractical. Waiting until traffic has already collapsed means the damage is done. The useful question is narrower: can we rank pages by decline risk so that the first 50 a reviewer opens are more likely to need work than a random sample?
+  </p>
+  <p>
+    This study treats that as a binary classification problem. Given a content item's search performance over January through March 2026, can we predict whether its impressions will drop by more than 20% in April? The goal is not a production system — it is a validated, transparent queue that a content reviewer can trust enough to start from.
+  </p>
+  <p>
+    The work follows a deliberate progression: a hand-built rule first (to set an honest floor), then a machine learning model (to test whether complexity earns its keep), then a grouped validation that asks whether either one generalizes beyond the clients it trained on.
+  </p>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- 2. DATA                                 -->
+  <!-- ════════════════════════════════════════ -->
+  <h2>2. Data</h2>
+
+  <p>
+    The dataset comes from the <strong>FlyRank ML Internship Warehouse</strong> (<code>fact_content_daily_performance</code> table), a daily-grain export of Google Search Console and Google Analytics 4 metrics for content items across 57 brands. Each row represents one content item on one day.
+  </p>
+
+  <h3>Scope and filters</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Parameter</th><th>Value</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Date range</td><td>January 1 – April 30, 2026</td></tr>
+        <tr><td>Filter applied</td><td><code>ga4_data_available = True</code></td></tr>
+        <tr><td>Total daily rows</td><td class="num">1,199,364</td></tr>
+        <tr><td>Unique content items (labeled)</td><td class="num">142,628</td></tr>
+        <tr><td>Content items after feature aggregation</td><td class="num">66,926 (model) / 95,000+ (playbook)</td></tr>
+        <tr><td>Brands</td><td class="num">57</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Features used</h3>
+  <p>
+    15 raw daily metrics were aggregated to the content level using sum and mean, producing 31 features. A computed CTR column (clicks / impressions) was added. All features were drawn from January–March data only. April data was used solely for the label.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Source</th><th>Features</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Google Search Console</td><td>gsc_impressions, gsc_clicks, gsc_avg_position</td></tr>
+        <tr><td>Google Analytics 4</td><td>ga4_pageviews, ga4_sessions, ga4_users, ga4_engaged_sessions, ga4_total_engagement_sec</td></tr>
+        <tr><td>Traffic channels</td><td>sessions_organic, sessions_direct, sessions_referral, sessions_social, sessions_paid, sessions_ai</td></tr>
+        <tr><td>Engagement</td><td>scroll_events</td></tr>
+        <tr><td>Computed</td><td>ctr (clicks / impressions)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Excluded columns</h3>
+  <p>
+    Three columns were excluded from features: <code>gsc_data_available</code>, <code>ga4_data_available</code> (filter flags, not predictive features), and <code>gsc_sum_position</code> (redundant with <code>gsc_avg_position</code>).
+  </p>
+
+  <h3>Label definition</h3>
+  <div class="callout">
+    <div class="callout-title">is_declining_label</div>
+    <p>A content item is labeled as declining (1) if its total April 2026 impressions are less than 80% of its total March 2026 impressions. Otherwise it is labeled as not declining (0).</p>
+  </div>
+  <p>
+    This label was chosen because it captures a meaningful drop (20%+) over a single month boundary, using the same metric (impressions) that content teams track operationally. The 80% threshold is a judgment call — a stricter threshold (70%) would produce fewer positives, a looser one (90%) would produce more.
+  </p>
+
+  <h3>Public safety</h3>
+  <p>
+    All content items are identified by hashed IDs (<code>content_hash_id</code>). All clients are identified by hashed IDs (<code>client_hash_id</code>). No real URLs, brand names, search queries, or private data appear anywhere in this paper or in the exported files.
+  </p>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- 3. METHODOLOGY                          -->
+  <!-- ════════════════════════════════════════ -->
+  <h2>3. Methodology</h2>
+
+  <h3>Assumptions</h3>
+  <p>
+    This study assumes that search position and visibility patterns observable in January–March carry signal about April decline. It assumes the label (20% impression drop) is a meaningful proxy for "content that needs attention." It does not assume that position causes decline, only that position patterns are associated with it in this dataset.
+  </p>
+
+  <h3>Signal validation</h3>
+  <p>
+    Before building any model, two signals were tested with bucket tables. CTR-vs-position was confirmed: decline rate rose from 32.5% at positions 4–10 to 58.3% at positions 21–50 (n = 1,040,092). Engagement rate was tested and showed the opposite of the expected pattern — higher engagement correlated with higher decline rate — so it was dropped. This negative result saved the baseline from including a misleading signal.
+  </p>
+
+  <h3>Baseline rule</h3>
+  <p>
+    The baseline scores each content item as <code>avg_position × visible</code>, where <code>visible = 1</code> if total impressions ≥ 100, else 0. Items are ranked by score descending (worst position among visible items first). Each item carries a single reason code (<code>low_ctr_for_position</code>) and an action label (<code>review_and_optimize</code>). No fitted weights. No learned parameters. The rule is fully transparent.
+  </p>
+
+  <h3>Models</h3>
+  <p>
+    Two models were trained: Logistic Regression (readable, linear boundary) and Random Forest (non-linear, interaction-capable). Both used the same 31 features and the same train/test split. The Random Forest used 200 trees, max depth 10, and a fixed random seed (42).
+  </p>
+
+  <h3>Validation design</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Split</th><th>Design</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Random split</td><td>80/20 stratified, seed 42</td><td>Standard comparison — content from the same client can appear in both train and test</td></tr>
+        <tr><td>Grouped split</td><td>GroupKFold by <code>client_hash_id</code>, 5 folds</td><td>Honest test — all content from one client stays in either train or test, never both</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    The grouped split asks: does the model work on clients it has never seen? This is the honest test. The random split is included for comparison but is not the basis for any claim about model quality.
+  </p>
+
+  <h3>Leakage audit</h3>
+  <p>
+    A six-point leakage checklist was applied: timeline check (features strictly before label window — clean), label-derived feature check (<code>gsc_impressions</code> is a sibling but removing it only dropped AUC by 0.012 — not dominating), product flag check (no FlyRank flags used — clean), top feature sanity check (no single feature suspiciously dominant), base rate printed alongside all metrics, and in-sample vs out-of-sample gap check (flagged overfitting — see Results).
+  </p>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- 4. RESULTS                              -->
+  <!-- ════════════════════════════════════════ -->
+  <h2>4. Results</h2>
+
+  <h3>Model vs baseline: random split</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Metric</th><th class="num">Base Rate</th><th class="num">Baseline</th><th class="num">Log. Reg.</th><th class="num">Random Forest</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Precision@10</td><td class="num">0.530</td><td class="num">0.600</td><td class="num">0.700</td><td class="num">0.800</td></tr>
+        <tr><td>Precision@20</td><td class="num">0.530</td><td class="num">0.600</td><td class="num">0.800</td><td class="num">0.900</td></tr>
+        <tr><td>Precision@50</td><td class="num">0.530</td><td class="num">0.640</td><td class="num">0.880</td><td class="num">0.920</td></tr>
+        <tr><td>Precision@100</td><td class="num">0.530</td><td class="num">0.700</td><td class="num">0.860</td><td class="num">0.960</td></tr>
+        <tr><td>F1</td><td class="num">—</td><td class="num">—</td><td class="num">0.699</td><td class="num">0.723</td></tr>
+        <tr><td>AUC</td><td class="num">—</td><td class="num">—</td><td class="num">0.712</td><td class="num">0.754</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    On a random split, the Random Forest appeared to earn its complexity: it beat Logistic Regression at every metric, which beat the baseline, which beat the base rate. But this split allows content from the same client in both train and test — so it does not test generalization.
+  </p>
+
+  <h3>The honest test: grouped split</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Metric</th><th class="num">Random Split</th><th class="num">Grouped Split</th><th class="num">Gap</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Precision@10</td><td class="num">0.800</td><td class="num">0.700</td><td class="num" style="color:var(--negative)">−0.100</td></tr>
+        <tr><td>Precision@20</td><td class="num">0.900</td><td class="num">0.700</td><td class="num" style="color:var(--negative)">−0.200</td></tr>
+        <tr><td>Precision@50</td><td class="num">0.920</td><td class="num">0.620</td><td class="num" style="color:var(--negative)">−0.300</td></tr>
+        <tr><td>Precision@100</td><td class="num">0.960</td><td class="num">0.630</td><td class="num" style="color:var(--negative)">−0.330</td></tr>
+        <tr><td>F1</td><td class="num">0.723</td><td class="num">0.637</td><td class="num" style="color:var(--negative)">−0.086</td></tr>
+        <tr><td>AUC</td><td class="num">0.754</td><td class="num">0.549</td><td class="num" style="color:var(--negative)">−0.205</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Under grouped validation, AUC dropped from 0.754 to 0.549 — barely above the 0.50 coin-flip line. The model's ability to rank declining content above non-declining content nearly disappears on clients it has never seen. Training AUC was 0.832, confirming substantial overfitting (gap of 0.283).
+  </p>
+
+  <div class="callout">
+    <div class="callout-title">What this means</div>
+    <p>Roughly a third of the model's precision@100 performance was borrowed from client-level memorization, not from learning generalizable decline signals. The honest performance number is the grouped number. The random split number overstates what the model actually knows.</p>
+  </div>
+
+  <h3>Playbook precision</h3>
+  <p>
+    The baseline rule, applied to the full playbook dataset (95,000+ items, base rate 37.2%), produced the following action queue:
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Priority</th><th>Items</th><th class="num">Decline Rate</th><th class="num">Base Rate</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>P1 — review within 1 week</td><td class="num">50</td><td class="num">68.0%</td><td class="num">37.2%</td></tr>
+        <tr><td>P2 — review within 2 weeks</td><td class="num">150</td><td class="num">71.3%</td><td class="num">37.2%</td></tr>
+        <tr><td>P3 — watch list</td><td class="num">34,824</td><td class="num">49.7%</td><td class="num">37.2%</td></tr>
+        <tr><td>Skip — below visibility threshold</td><td class="num">60,425</td><td class="num">29.8%</td><td class="num">37.2%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    P1 and P2 items are nearly twice as likely to be declining as a random sample (68–71% vs 37%). This is the operating precision of the queue that a reviewer would actually use.
+  </p>
+
+  <figure>
+    <img src="fig_precision_by_tier.png" alt="Bar chart showing decline rate by priority tier compared to base rate">
+    <figcaption>Decline rate by priority tier. The dashed line marks the 37.2% base rate. P1 and P2 items substantially exceed the base rate, meaning the queue sends reviewers to the right pages more often than random selection.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="fig_precision_at_k.png" alt="Line chart showing precision at K for different review depths">
+    <figcaption>Precision@K curve. As the reviewer works deeper into the queue, precision gradually declines toward the base rate. The first 200 items provide the strongest signal; beyond that, the queue's advantage over random selection narrows.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="fig_p1_score_distribution.png" alt="Horizontal bar chart showing P1 items colored by whether they are actually declining">
+    <figcaption>P1 score distribution. Red bars are items that are genuinely declining; green bars are false positives. Approximately 32% of P1 items were not actually declining — most were content that had never performed rather than content that was falling.</figcaption>
+  </figure>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- 5. LIMITATIONS                          -->
+  <!-- ════════════════════════════════════════ -->
+  <h2>5. Limitations and Honest Framing</h2>
+
+  <p>
+    This section exists to state what this work cannot claim, before a reader does. Writing limitations yourself is what earns trust.
+  </p>
+
+  <h3>What this study is</h3>
+  <p>
+    An observational analysis of one portfolio snapshot (57 brands, January–April 2026). It identifies patterns associated with content decline and produces a ranked review queue. All findings are descriptive or directional — no causal claims are made.
+  </p>
+
+  <h3>What this study is not</h3>
+  <p>
+    It is not a production prediction system. It has not been validated across multiple time periods, geographies, or content types outside this portfolio. The model's poor grouped-validation performance (AUC 0.549) means it should not be used as a standalone predictor on new clients.
+  </p>
+
+  <h3>Specific limitations</h3>
+  <p>
+    <strong>The rule confuses "never performed" with "declining."</strong> Content stuck at position 80 with 110 impressions scores high but may never have had meaningful traffic. Approximately 32% of P1 items were false positives of this type. A trend feature (impression change over time rather than average level) would likely address this, but was not available in the current feature set.
+  </p>
+  <p>
+    <strong>Client memorization.</strong> The Random Forest model learned client-specific patterns rather than generalizable decline signals. With only 57 brands and 8 clients in the grouped test fold, the model's apparent strength on random splits was substantially inflated. The single-fold grouped result is itself noisy — a cross-validated average across all 5 folds would be more stable.
+  </p>
+  <p>
+    <strong>Single time window.</strong> All findings are conditioned on January–April 2026. Seasonal patterns, algorithm updates, or competitive shifts in other periods could change which signals matter.
+  </p>
+  <p>
+    <strong>Label threshold is a judgment call.</strong> The 80% threshold for "declining" is not objectively correct. Different thresholds would produce different class distributions and different model performance.
+  </p>
+  <p>
+    <strong>No external outcomes.</strong> The label measures impression change, not business impact. A page that loses impressions but maintains conversions is labeled as declining even if its value hasn't changed.
+  </p>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- 6. RECOMMENDATIONS                      -->
+  <!-- ════════════════════════════════════════ -->
+  <h2>6. Ranked Recommendations</h2>
+
+  <p>
+    These recommendations are ranked by how directly they follow from the evidence in this study. They are decision-support suggestions — a content reviewer makes the final call on every action.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Priority</th><th>Recommendation</th><th>Evidence basis</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>Start content review with the P1 queue (top 50 items by position score)</td>
+          <td>68% precision vs 37% base rate — nearly 2× more likely to find declining content than random review</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>For each flagged item, check whether it was ever performing before acting</td>
+          <td>32% of P1 items were false positives — content that never had traffic, not content that lost it</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>Prioritize content older than 270 days for refresh, not just review</td>
+          <td>FlyRank research paper observed content decline after 270 days with recovery when refreshed (observational, no matched control)</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>Do not automate any action based on this queue alone</td>
+          <td>32% false positive rate at P1; no action in this queue is validated for automation</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>Do not use the Random Forest model for scoring on new clients</td>
+          <td>AUC dropped from 0.754 to 0.549 under grouped validation — the model does not generalize</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>Rebuild the queue quarterly with fresh signal checks</td>
+          <td>Position-to-decline relationship may shift with algorithm updates or portfolio changes</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td>Add a trend feature (impression change over time) in the next iteration</td>
+          <td>The rule's main failure mode — confusing "never performed" with "declining" — would be addressed by a feature that measures change, not level</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- 7. REPRODUCIBILITY                      -->
+  <!-- ════════════════════════════════════════ -->
+  <h2>7. Reproducibility</h2>
+
+  <p>
+    All notebooks, exported data, and figures are available in the project repository. The analysis can be rerun end-to-end from the source data using the notebooks below.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Artifact</th><th>Location</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Data contract</td><td><code>work/notebooks/w03_data_contract.ipynb</code></td></tr>
+        <tr><td>Baseline notebook</td><td><code>work/notebooks/w04_baseline.ipynb</code></td></tr>
+        <tr><td>Model training notebook</td><td><code>work/notebooks/w05_model.ipynb</code></td></tr>
+        <tr><td>Validation &amp; leakage audit</td><td><code>work/notebooks/w06_validation.ipynb</code></td></tr>
+        <tr><td>Playbook notebook</td><td><code>work/notebooks/w07_playbook.ipynb</code></td></tr>
+        <tr><td>Ranked action queue (CSV)</td><td><code>work/outputs/playbook_action_queue.csv</code></td></tr>
+        <tr><td>Priority summary (CSV)</td><td><code>work/outputs/playbook_priority_summary.csv</code></td></tr>
+        <tr><td>Full project repository</td><td><a href="https://github.com/cokezero20/FlyRank_AI_ML_Internship_NATIVIDAD">github.com/cokezero20/FlyRank_AI_ML_Internship_NATIVIDAD</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    Random seed: 42. Python libraries: scikit-learn, pandas, numpy, matplotlib. Data source: FlyRank internship warehouse (<code>fact_content_daily_performance</code> table, accessed via HuggingFace Datasets with token authentication).
+  </p>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- 8. ACKNOWLEDGMENTS                      -->
+  <!-- ════════════════════════════════════════ -->
+  <h2>8. Acknowledgments and Data Credit</h2>
+
+  <p>
+    Built on the FlyRank ML Internship dataset. The data, skills framework, and session curriculum were provided by <a href="https://flyrank.ai" target="_blank" rel="noopener">FlyRank</a>. The FlyRank research paper ("The State of AI-Driven SEO," March 2026) served as both a reference and a methodological case study throughout this work.
+  </p>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- FOOTER                                  -->
+  <!-- ════════════════════════════════════════ -->
+  <footer>
+    <p>© 2026 John Matthew Natividad · Built on the <a href="https://flyrank.ai" target="_blank" rel="noopener">FlyRank</a> ML Internship dataset</p>
+    <p>This is a capstone research paper for the FlyRank AI/ML Internship program. All data is anonymized and public-safe.</p>
+  </footer>
+
+</div>
+
+</body>
+</html>
